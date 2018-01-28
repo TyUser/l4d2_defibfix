@@ -166,6 +166,60 @@ DETOUR_DECL_STATIC1(CSurvivorDeathModel__Create, CBaseEntity *, CBasePlayer*, bp
 	return result;
 }
 
+void HxDestroyAll()
+{
+	if (hg_getPlayer)
+	{
+		hg_getPlayer->Destroy();
+		hg_getPlayer = NULL;
+	}
+	if (hg_defibStart)
+	{
+		hg_defibStart->Destroy();
+		hg_defibStart = NULL;
+	}
+	if (hg_defibEnd)
+	{
+		hg_defibEnd->Destroy();
+		hg_defibEnd = NULL;
+	}
+	if (hg_deadPlayer)
+	{
+		hg_deadPlayer->Destroy();
+		hg_deadPlayer = NULL;
+	}
+}
+
+bool HxStart()
+{
+	CDetourManager::Init(g_pSM->GetScriptingEngine(), g_pGameConf);
+	g_pGameConf->GetMemSig("CBaseEntity::SetAbsOrigin",(void **)&CBaseEntity__SetAbsOrigin);
+
+	hg_getPlayer  = DETOUR_CREATE_STATIC(GetPlayerByCharacter, "GetPlayerByCharacter");
+	hg_defibStart = DETOUR_CREATE_MEMBER(DefibrillatorOnStartAction, "DefibrillatorOnStartAction");
+	hg_defibEnd   = DETOUR_CREATE_MEMBER(DefibrillatorOnActionComplete, "DefibrillatorOnActionComplete");
+	hg_deadPlayer = DETOUR_CREATE_STATIC(CSurvivorDeathModel__Create, "CSurvivorDeathModel::Create");
+
+	int iError=1;
+	if (hg_getPlayer && hg_defibStart && hg_defibEnd && hg_deadPlayer && CBaseEntity__SetAbsOrigin)
+	{
+		hg_getPlayer->EnableDetour();
+		hg_defibStart->EnableDetour();
+		hg_defibEnd->EnableDetour();
+		hg_deadPlayer->EnableDetour();
+
+		iError=0;
+	}
+
+	if (iError)
+	{
+		HxDestroyAll();
+		return false;
+	}
+
+	return true;
+}
+
 bool DefibFix::SDK_OnMetamodLoad( ISmmAPI *ismm, char *error, size_t maxlength, bool late )
 {
 	size_t maxlen=maxlength;
@@ -183,13 +237,13 @@ bool DefibFix::SDK_OnLoad( char *error, size_t maxlength, bool late )
 	char conf_error[255];
 	if (!gameconfs->LoadGameConfigFile(GAMEDATA_FILE, &g_pGameConf, conf_error, sizeof(conf_error)))
 	{
-		snprintf(error, maxlength, "Could not read defibfix.txt: %s", conf_error);
+		snprintf(error, maxlength, "Проблема с defibfix.txt: %s", conf_error);
 		return false;
 	}
 
-	if (!SetupHooks())
+	if (!HxStart())
 	{
-		snprintf(error, maxlength, "Cannot SetupHooks or GetOffset.");
+		snprintf(error, maxlength, "Проблема с GetOffset");
 		return false;
 	}
 
@@ -198,63 +252,6 @@ bool DefibFix::SDK_OnLoad( char *error, size_t maxlength, bool late )
 
 void DefibFix::SDK_OnUnload()
 {
-	DefibFix::RemoveHooks();
+	HxDestroyAll();
 	gameconfs->CloseGameConfigFile(g_pGameConf);
-}
-
-bool DefibFix::SetupHooks()
-{
-	CDetourManager::Init(g_pSM->GetScriptingEngine(), g_pGameConf);
-	g_pGameConf->GetMemSig("CBaseEntity::SetAbsOrigin",(void **)&CBaseEntity__SetAbsOrigin);
-
-	hg_getPlayer  = DETOUR_CREATE_STATIC(GetPlayerByCharacter, "GetPlayerByCharacter");
-	hg_defibStart = DETOUR_CREATE_MEMBER(DefibrillatorOnStartAction, "DefibrillatorOnStartAction");
-	hg_defibEnd   = DETOUR_CREATE_MEMBER(DefibrillatorOnActionComplete, "DefibrillatorOnActionComplete");
-	hg_deadPlayer = DETOUR_CREATE_STATIC(CSurvivorDeathModel__Create, "CSurvivorDeathModel::Create");
-
-	if ((hg_getPlayer != NULL)
-		 && (hg_defibStart != NULL)
-		 && (hg_defibEnd != NULL)
-		 && (hg_deadPlayer!=NULL)
-		 && (CBaseEntity__SetAbsOrigin!=NULL))
-	{
-		hg_getPlayer->EnableDetour();
-		hg_defibStart->EnableDetour();
-		hg_defibEnd->EnableDetour();
-		hg_deadPlayer->EnableDetour();
-	}
-	else
-	{
-		RemoveHooks();
-		return false;
-	}
-
-	return true;
-}
-
-void DefibFix::RemoveHooks()
-{
-	if (hg_getPlayer != NULL)
-	{
-		hg_getPlayer->Destroy();
-		hg_getPlayer = NULL;
-	}
-
-	if (hg_defibStart != NULL)
-	{
-		hg_defibStart->Destroy();
-		hg_defibStart = NULL;
-	}
-
-	if (hg_defibEnd != NULL)
-	{
-		hg_defibEnd->Destroy();
-		hg_defibEnd = NULL;
-	}
-
-	if (hg_deadPlayer != NULL)
-	{
-		hg_deadPlayer->Destroy();
-		hg_deadPlayer = NULL;
-	}
 }
