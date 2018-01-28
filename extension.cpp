@@ -24,7 +24,7 @@ int ig_noob;
 *	return -1           // Мертвый игрок не найден.
 *	return (от 1 до 32) // Номер мертвого игрока.
 **/
-signed int HxPlayerDead()
+signed int HxGetDead(void)
 {
 	signed int iDead1 = -1;
 	signed int iDead2 = -1;
@@ -88,79 +88,79 @@ signed int HxPlayerDead()
 
 	if (iDead1 > 0)
 	{
-		g_pSM->LogMessage(myself,"Выбран %d", iDead1);
+		g_pSM->LogMessage(myself, "Выбран %d", iDead1);
 		return iDead1;
 	}
 
 	if (iDead2 > 0)
 	{
-		g_pSM->LogMessage(myself,"Выбран %d", iDead2);
+		g_pSM->LogMessage(myself, "Выбран %d", iDead2);
 		return iDead2;
 	}
 
-	g_pSM->LogMessage(myself,"Выбран %d", iDead3);
+	g_pSM->LogMessage(myself, "Выбран %d", iDead3);
 	return iDead3;
 }
 
-DETOUR_DECL_STATIC1(GetPlayerByCharacter, void *, int, charaster)
+DETOUR_DECL_STATIC1(HxPlayerSpawn, void *, int, charaster)
 {
 	if (ig_defib)
 	{
 		ig_defib = 0;
-		int iDead = HxPlayerDead();
+		int iDead = HxGetDead();
 		if (iDead > 0)
 		{
 			ig_noob = iDead;
-			g_pSM->LogMessage(myself,"Воскрешается %d", iDead);
+			g_pSM->LogMessage(myself, "Воскрешается %d", iDead);
 			return gamehelpers->ReferenceToEntity(iDead);
 		}
 
-		g_pSM->LogMessage(myself,"Ошибка");
+		g_pSM->LogMessage(myself, "Ошибка");
 		return 0;
 	}
 
-	return DETOUR_STATIC_CALL(GetPlayerByCharacter)(charaster);
+	return DETOUR_STATIC_CALL(HxPlayerSpawn)(charaster);
 }
 
-DETOUR_DECL_MEMBER4(DefibrillatorOnStartAction, void *, int,reserved, void*,player, void*,entity, int,reserved2)
+DETOUR_DECL_MEMBER4(HxDefibStart, void *, int, reserved, void*, player, void*, entity, int, reserved2)
 {
 	edict_t *edict=gameents->BaseEntityToEdict((CBaseEntity*)entity);
 
 	if (edict)
 	{
-		g_pSM->LogMessage(myself,"Начало дефибрилляции");
-		if (HxPlayerDead() == -1)
+		g_pSM->LogMessage(myself, "Начало дефибрилляции");
+		if (HxGetDead() == -1)
 		{
-			g_pSM->LogMessage(myself,"Труп удаляется");
+			g_pSM->LogMessage(myself, "Труп удаляется");
 			engine->RemoveEdict(edict);
 		}
 	}
 
-	return DETOUR_MEMBER_CALL(DefibrillatorOnStartAction)(reserved,player,entity,reserved2);
+	return DETOUR_MEMBER_CALL(HxDefibStart)(reserved, player, entity, reserved2);
 }
 
-DETOUR_DECL_MEMBER2(DefibrillatorOnActionComplete, void *, void*, player, void*, entity)
+DETOUR_DECL_MEMBER2(HxDefibEnd, void *, void*, player, void*, entity)
 {
 	edict_t *edict=gameents->BaseEntityToEdict((CBaseEntity*)entity);
 	if (edict)
 	{
-		g_pSM->LogMessage(myself,"Окончание дефибрилляции");
+		g_pSM->LogMessage(myself, "Окончание дефибрилляции");
 		ig_defib = 1;
 	}
 
-	return DETOUR_MEMBER_CALL(DefibrillatorOnActionComplete)(player,entity);
+	return DETOUR_MEMBER_CALL(HxDefibEnd)(player, entity);
 }
 
-DETOUR_DECL_STATIC1(CSurvivorDeathModel__Create, CBaseEntity *, CBasePlayer*, bplayer)
+DETOUR_DECL_STATIC1(HxDeathModel, CBaseEntity *, CBasePlayer*, bplayer)
 {
 	edict_t *pEdict=gameents->BaseEntityToEdict((CBaseEntity*)bplayer);
 	int client=gamehelpers->IndexOfEdict(pEdict);
 
-	CBaseEntity * result = DETOUR_STATIC_CALL(CSurvivorDeathModel__Create)(bplayer);
+	CBaseEntity * result = DETOUR_STATIC_CALL(HxDeathModel)(bplayer);
 	if (client > 0) 
 	{
 		Vector PlayerOrigin=pEdict->GetCollideable()->GetCollisionOrigin();
-		CBaseEntity__SetAbsOrigin(result,&PlayerOrigin);
+		CBaseEntity__SetAbsOrigin(result, &PlayerOrigin);
 	}
 
 	return result;
@@ -193,14 +193,14 @@ void HxDestroyAll(void)
 bool HxStart(void)
 {
 	CDetourManager::Init(g_pSM->GetScriptingEngine(), g_pGameConf);
-	g_pGameConf->GetMemSig("CBaseEntity::SetAbsOrigin",(void **)&CBaseEntity__SetAbsOrigin);
+	g_pGameConf->GetMemSig("CBaseEntity::SetAbsOrigin", (void **)&CBaseEntity__SetAbsOrigin);
 
-	hg_getPlayer  = DETOUR_CREATE_STATIC(GetPlayerByCharacter, "GetPlayerByCharacter");
-	hg_defibStart = DETOUR_CREATE_MEMBER(DefibrillatorOnStartAction, "DefibrillatorOnStartAction");
-	hg_defibEnd   = DETOUR_CREATE_MEMBER(DefibrillatorOnActionComplete, "DefibrillatorOnActionComplete");
-	hg_deadPlayer = DETOUR_CREATE_STATIC(CSurvivorDeathModel__Create, "CSurvivorDeathModel::Create");
+	hg_getPlayer  = DETOUR_CREATE_STATIC(HxPlayerSpawn, "GetPlayerByCharacter");
+	hg_defibStart = DETOUR_CREATE_MEMBER(HxDefibStart,  "DefibrillatorOnStartAction");
+	hg_defibEnd   = DETOUR_CREATE_MEMBER(HxDefibEnd,    "DefibrillatorOnActionComplete");
+	hg_deadPlayer = DETOUR_CREATE_STATIC(HxDeathModel,  "CSurvivorDeathModel::Create");
 
-	if (hg_getPlayer && hg_defibStart && hg_defibEnd && hg_deadPlayer && CBaseEntity__SetAbsOrigin)
+	if (CBaseEntity__SetAbsOrigin && hg_getPlayer && hg_defibStart && hg_defibEnd && hg_deadPlayer)
 	{
 		hg_getPlayer->EnableDetour();
 		hg_defibStart->EnableDetour();
@@ -236,7 +236,7 @@ bool DefibFix::SDK_OnLoad( char *error, size_t maxlength, bool late )
 
 	if (!HxStart())
 	{
-		snprintf(error, maxlength, "Проблема с GetOffset");
+		snprintf(error, maxlength, "Проблема с Offset");
 		return false;
 	}
 
