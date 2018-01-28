@@ -14,7 +14,7 @@ tCBaseEntity__SetAbsOrigin CBaseEntity__SetAbsOrigin;
 IGameConfig *g_pGameConf = NULL;
 IServerGameEnts *gameents = NULL;
 
-DefibFix g_DefibFix;		/**< Global singleton for extension's main interface */
+DefibFix g_DefibFix;
 SMEXT_LINK(&g_DefibFix);
 
 int ig_defib;
@@ -24,11 +24,11 @@ int ig_noob;
 *	return -1           // Мертвый игрок не найден.
 *	return (от 1 до 32) // Номер мертвого игрока.
 **/
-int HxPlayerDead()
+signed int HxPlayerDead()
 {
-	int iDead1 = -1;
-	int iDead2 = -1;
-	int iDead3 = -1;
+	signed int iDead1 = -1;
+	signed int iDead2 = -1;
+	signed int iDead3 = -1;
 	int i = 1;
 
 	while (i <= 32)
@@ -166,7 +166,7 @@ DETOUR_DECL_STATIC1(CSurvivorDeathModel__Create, CBaseEntity *, CBasePlayer*, bp
 	return result;
 }
 
-void HxDestroyAll()
+void HxDestroyAll(void)
 {
 	if (hg_getPlayer)
 	{
@@ -190,7 +190,7 @@ void HxDestroyAll()
 	}
 }
 
-bool HxStart()
+bool HxStart(void)
 {
 	CDetourManager::Init(g_pSM->GetScriptingEngine(), g_pGameConf);
 	g_pGameConf->GetMemSig("CBaseEntity::SetAbsOrigin",(void **)&CBaseEntity__SetAbsOrigin);
@@ -200,24 +200,17 @@ bool HxStart()
 	hg_defibEnd   = DETOUR_CREATE_MEMBER(DefibrillatorOnActionComplete, "DefibrillatorOnActionComplete");
 	hg_deadPlayer = DETOUR_CREATE_STATIC(CSurvivorDeathModel__Create, "CSurvivorDeathModel::Create");
 
-	int iError=1;
 	if (hg_getPlayer && hg_defibStart && hg_defibEnd && hg_deadPlayer && CBaseEntity__SetAbsOrigin)
 	{
 		hg_getPlayer->EnableDetour();
 		hg_defibStart->EnableDetour();
 		hg_defibEnd->EnableDetour();
 		hg_deadPlayer->EnableDetour();
-
-		iError=0;
+		return true;
 	}
 
-	if (iError)
-	{
-		HxDestroyAll();
-		return false;
-	}
-
-	return true;
+	HxDestroyAll();
+	return false;
 }
 
 bool DefibFix::SDK_OnMetamodLoad( ISmmAPI *ismm, char *error, size_t maxlength, bool late )
