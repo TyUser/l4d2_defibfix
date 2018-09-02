@@ -78,7 +78,8 @@ HX_FLAGS += -DPOSIX \
 	-Wno-non-virtual-dtor \
 	-fno-exceptions \
 	-fno-rtti \
-	-fvisibility-inlines-hidden
+	-fvisibility-inlines-hidden \
+	-std=c++11
 
 #
 HX_FLAGS += -Wall \
