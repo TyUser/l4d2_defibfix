@@ -3,6 +3,7 @@
 #include <iplayerinfo.h>
 
 #define GAMEDATA_FILE "defibfix"
+#define HX_LOG 0
 
 CDetour *hg_getPlayer  = NULL;
 CDetour *hg_defibStart = NULL;
@@ -45,8 +46,9 @@ signed int HxGetDead(void)
 					{
 						if (info->IsObserver())
 						{
+						#if HX_LOG
 							g_pSM->LogMessage(myself, "Dead %d [%s]", i, info->GetName());
-
+						#endif
 							if (info->IsFakeClient())
 							{
 								iDead3 = i;
@@ -63,8 +65,9 @@ signed int HxGetDead(void)
 
 						if (info->IsDead())
 						{
+						#if HX_LOG
 							g_pSM->LogMessage(myself, "Dead %d [%s]", i, info->GetName());
-
+						#endif
 							if (info->IsFakeClient())
 							{
 								iDead3 = i;
@@ -88,17 +91,23 @@ signed int HxGetDead(void)
 
 	if (iDead1 > 0)
 	{
+	#if HX_LOG
 		g_pSM->LogMessage(myself, "Выбран %d", iDead1);
+	#endif
 		return iDead1;
 	}
 
 	if (iDead2 > 0)
 	{
+	#if HX_LOG
 		g_pSM->LogMessage(myself, "Выбран %d", iDead2);
+	#endif
 		return iDead2;
 	}
 
+#if HX_LOG
 	g_pSM->LogMessage(myself, "Выбран %d", iDead3);
+#endif
 	return iDead3;
 }
 
