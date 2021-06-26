@@ -1,0 +1,34 @@
+"Games"
+{
+	"left4dead2"
+	{
+		"Signatures"
+		{
+			"CBaseEntity::SetAbsOrigin"
+			{
+				"library"	"server"
+				"linux"		"@_ZN11CBaseEntity12SetAbsOriginERK6Vector"
+			}
+			"GetPlayerByCharacter"
+			{
+				"library"	"server"
+				"linux"		"@_ZN13CTerrorPlayer20GetPlayerByCharacterE21SurvivorCharacterType"
+			}
+			"DefibrillatorOnStartAction"
+			{
+				"library"	"server"
+				"linux"		"@_ZN18CItemDefibrillator13OnStartActionEN17CBaseBackpackItem22BackpackItemActionTypeEP13CTerrorPlayerP11CBaseEntityf"
+			}
+			"DefibrillatorOnActionComplete"
+			{
+				"library"	"server"
+				"linux"		"@_ZN18CItemDefibrillator16OnActionCompleteEP13CTerrorPlayerP11CBaseEntity"
+			}
+			"CSurvivorDeathModel::Create"
+			{
+				"library"	"server"
+				"linux"		"@_ZN19CSurvivorDeathModel6CreateEP13CTerrorPlayer"
+			}
+		}
+	}
+}
