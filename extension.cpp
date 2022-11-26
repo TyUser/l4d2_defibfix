@@ -120,11 +120,15 @@ DETOUR_DECL_STATIC1(HxPlayerSpawn, void *, int, charaster)
 		if (iDead > 0)
 		{
 			ig_noob = iDead;
+#if HX_LOG
 			g_pSM->LogMessage(myself, "Воскрешается %d", iDead);
+#endif
 			return gamehelpers->ReferenceToEntity(iDead);
 		}
 
+#if HX_LOG
 		g_pSM->LogMessage(myself, "Ошибка");
+#endif
 		return 0;
 	}
 
@@ -137,10 +141,14 @@ DETOUR_DECL_MEMBER4(HxDefibStart, void *, int, reserved, void*, player, void*, e
 
 	if (edict)
 	{
+#if HX_LOG
 		g_pSM->LogMessage(myself, "Начало дефибрилляции");
+#endif
 		if (HxGetDead() == -1)
 		{
+#if HX_LOG
 			g_pSM->LogMessage(myself, "Труп удаляется");
+#endif
 			engine->RemoveEdict(edict);
 		}
 	}
