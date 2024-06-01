@@ -5,9 +5,9 @@
 #define GAMEDATA_FILE "defibfix"
 #define HX_LOG 0
 
-CDetour *hg_getPlayer  = NULL;
+CDetour *hg_getPlayer = NULL;
 CDetour *hg_defibStart = NULL;
-CDetour *hg_defibEnd   = NULL;
+CDetour *hg_defibEnd = NULL;
 CDetour *hg_deadPlayer = NULL;
 
 tCBaseEntity__SetAbsOrigin CBaseEntity__SetAbsOrigin;
@@ -214,9 +214,9 @@ bool HxStart(void)
 	CDetourManager::Init(g_pSM->GetScriptingEngine(), g_pGameConf);
 	g_pGameConf->GetMemSig("CBaseEntity::SetAbsOrigin", (void **) &CBaseEntity__SetAbsOrigin);
 
-	hg_getPlayer  = DETOUR_CREATE_STATIC(HxPlayerSpawn,       "GetPlayerByCharacter");
-	hg_defibStart = DETOUR_CREATE_MEMBER(HxDefibStart,  "DefibrillatorOnStartAction");
-	hg_defibEnd   = DETOUR_CREATE_MEMBER(HxDefibEnd, "DefibrillatorOnActionComplete");
+	hg_getPlayer = DETOUR_CREATE_STATIC(HxPlayerSpawn, "GetPlayerByCharacter");
+	hg_defibStart = DETOUR_CREATE_MEMBER(HxDefibStart, "DefibrillatorOnStartAction");
+	hg_defibEnd = DETOUR_CREATE_MEMBER(HxDefibEnd, "DefibrillatorOnActionComplete");
 	hg_deadPlayer = DETOUR_CREATE_STATIC(HxDeathModel, "CSurvivorDeathModel::Create");
 
 	if (CBaseEntity__SetAbsOrigin && hg_getPlayer && hg_defibStart && hg_defibEnd && hg_deadPlayer)
