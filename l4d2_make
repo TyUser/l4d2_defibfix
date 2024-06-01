@@ -54,7 +54,7 @@ HX_FLAGS += -DSE_EPISODEONE=1 \
 	-DSE_CSGO=12
 
 #
-HX_FLAGS += -DPOSIX \
+HX_FLAGS += -DPOSIX -DPLATFORM_POSIX\
 	-Dstricmp=strcasecmp \
 	-D_stricmp=strcasecmp \
 	-D_strnicmp=strncasecmp \
