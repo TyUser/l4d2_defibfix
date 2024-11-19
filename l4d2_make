@@ -1,5 +1,5 @@
 ##
-#	debian 8
+#	debian 10
 #
 #	mkdir -p alliedmodders
 #	cd alliedmodders
@@ -83,7 +83,7 @@ HX_FLAGS += -DPOSIX -DPLATFORM_POSIX\
 	-fno-exceptions \
 	-fno-rtti \
 	-fvisibility-inlines-hidden \
-	-std=c++11
+	-Wno-register -std=c++17
 
 #
 HX_FLAGS += -Wall \
