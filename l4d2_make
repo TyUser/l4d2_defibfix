@@ -83,7 +83,7 @@ HX_FLAGS += -DPOSIX -DPLATFORM_POSIX\
 	-fno-exceptions \
 	-fno-rtti \
 	-fvisibility-inlines-hidden \
-	-Wno-register -std=c++17
+	-Wno-register -std=c++11
 
 #
 HX_FLAGS += -Wall \
