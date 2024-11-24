@@ -5,7 +5,7 @@
 1) Sourcemod плагин игры Left 4 Dead 2 режима Coop 4+ игроков.
 2) Дефибриллятор корректно спавнит игроков.
 
-Сборка под debian 8 x32:
+Сборка под debian 10 i386:
 * mkdir -p alliedmodders
 * cd alliedmodders
 * git clone --depth=1 --branch=1.10-dev --recursive https://github.com/alliedmodders/sourcemod sourcemod
